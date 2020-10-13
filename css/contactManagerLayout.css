@@ -1,0 +1,83 @@
+/*
+    auteur: Nicolas Chourot
+ */
+body {
+    background-color: white;
+}
+button {
+    padding: 2px 3px;
+    font-size: small;
+    color: blue;
+}
+.header-container {
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+.header-contacts-container {
+    display: grid;
+    grid-template-columns: 25% 25% 35% 5% 10%;
+}
+.header-contacts-container div {
+    font-size: large;
+    font-weight: bold;
+    text-align: left;
+    padding: 5px;
+    background-color: gray;
+    color: white;
+}
+.contact-list-scroll-containter {
+    height: 320px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+.contact-list-container {
+    display: grid;
+    grid-template-columns:   25% 25% 35% 5% 10%;
+}
+.contact-list-container div {
+    text-align: left;
+    padding: 5px;
+}
+.oddRow {
+    background-color: white;
+}
+.evenRow {
+    background-color: lightcyan;
+}
+
+.waiting {
+    font-size: 14px;
+    font-weight: bold;
+    color:green;
+}
+
+.httpError {
+    font-size: 14px;
+    font-weight: bold;
+    color:red;
+}
+.form-container {
+    overflow-y: hidden;
+}
+.form-contact-container {
+    display: grid;
+    grid-template-columns:  25% 25% 35% 5% 10%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+.form-contact-container div {
+    text-align: left;
+    padding: 5px;
+    background-color: lightgray;
+}
+.array-container {
+    border:1px solid black;
+}
+.cell {
+    height: 40px;
+    cursor: pointer;
+    font-size: 16px;
+}
+.selectedRow {
+    background-color: darkturquoise;
+}
