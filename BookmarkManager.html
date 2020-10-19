@@ -29,9 +29,9 @@
             <div class="array-container">
                 <div class="header-container">
                     <div class="header-bookmarks-container">
-                        <div>Nom</div>
-                        <div>Url</div>
-                        <div>Category</div>
+                        <div id="NameColumn">Nom</div>
+                        <div id="UrlColumn">Url</div>
+                        <div id="CategoryColumn">Category</div>
                         <div>
                             <button id="showAddbookmark"
                                     tooltip="Ajouter un bookmark" tooltip-position="left">
@@ -78,6 +78,12 @@
                     </div>
                 </div>
                 <div class="bookmark-list-scroll-containter">
+                    <div class="form-search-container">
+                        <input type="text" id="txtSearch" placeholder="Rechercher"/>
+                        <button id="btnSearch" tooltip="Rechercher" tooltip-position="left">
+                            <span  class="glyphicon glyphicon-search"></span>
+                        </button>
+                    </div>
                     <div class="bookmark-list-container" id="bookmarkList">
                         <!-- La liste de bookmarks sera injectÃ©e ici par du JavaScript -->
                     </div>
@@ -118,6 +124,10 @@
                 $('#modifybookmark').click(modifybookmark);
                 $('#cancel').click(eraseForm);
                 $('#Name').keypress(textInputAlphaFilter);
+                $('#btnSearch').click(getSortedbookmarks);
+                //$('#NameColumn').click(webAPI_getSortedbookmarks(updatebookmarkList, insertErrorStatus));
+                //$('#UrlColumn').click(webAPI_getSortedbookmarks(updatebookmarkList, insertErrorStatus));
+               // $('#CategoryColumn').click(webAPI_getSortedbookmarks(updatebookmarkList, insertErrorStatus));
 
                 // Ajout d'un message d'attente de rÃ©ponse du serveur.
                 // Cela peut prendre quelques secondes avant que le serveur Web
@@ -210,6 +220,12 @@
             // RequÃªte au service web API: Liste des bookmarks
             function getbookmarks() {
                 webAPI_getbookmarks(updatebookmarkList, insertErrorStatus);
+            }
+
+            function getSortedbookmarks() {
+                searchString = $('#txtSearch').val()
+                alert(searchString);
+                //webAPI_getSortedbookmarks(updatebookmarkList, insertErrorStatus);
             }
 
             // Afficher le formulaire pour la saisie de bookmark

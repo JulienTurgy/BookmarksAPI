@@ -39,7 +39,7 @@ function API_Endpoint(req, res) {
 const PORT = process.env.PORT || 5000;
 require('http').createServer((req, res) => {
     // Middlewares pipeline
-    ShowRequestInfo(req);
+    //ShowRequestInfo(req);
     AccessControlConfig(res);
     if (!CORS_Prefligth(req, res)) { 
         if (!API_Endpoint(req, res)) {

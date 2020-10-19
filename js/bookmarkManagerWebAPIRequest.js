@@ -2,8 +2,8 @@
     Méthodes d'accès aux services Web API bookmarksManager
  */
 
-//const apiBaseURL= "http://localhost:5000/api/bookmarks";
-const apiBaseURL= "http://cliff-alluring-wormhole.glitch.me/api/bookmarks";
+const apiBaseURL= "http://localhost:5000/api/bookmarks";
+//const apiBaseURL= "http://cliff-alluring-wormhole.glitch.me/api/bookmarks";
 
 function webAPI_getbookmarks( successCallBack, errorCallBack) {
     $.ajax({
@@ -26,10 +26,26 @@ function webAPI_getbookmark( id, successCallBack, errorCallBack) {
         type: 'GET',
         contentType:'text/plain',
         data:{},
-        success: bookmark => { successCallBack(bookmark); console.log("webAPI_getbookmark - success");},
+        success: bookmark => { successCallBack(bookmark); 
+                                console.log("webAPI_getbookmark - success");},
         error: function(jqXHR, textStatus, errorThrown) {
             errorCallBack(errorThrown);
             console.log("webAPI_getbookmark - error");
+        }
+    });
+}
+
+function webAPI_getSortedbookmarks(sortOpt, successCallBack, errorCallBack) {
+    $.ajax({
+        url: apiBaseURL,
+        type: 'GET',
+        contentType:'text/plain',
+        data:{},
+        success: bookmarks => {  successCallBack(bookmarks);
+                                console.log("webAPI_getbookmarks - success");},
+        error: function(jqXHR, textStatus, errorThrown) {
+            errorCallBack(errorThrown);
+            console.log("webAPI_getbookmarks - error");
         }
     });
 }

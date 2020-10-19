@@ -56,6 +56,11 @@ button {
 .form-container {
     overflow-y: hidden;
 }
+.form-search-container {
+    overflow-y: hidden;
+    display: grid;
+    grid-template-columns: 95% 5%;
+}
 .form-bookmark-container {
     display: grid;
     grid-template-columns:  25% 25% 35% 5% 10%;
