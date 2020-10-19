@@ -14,68 +14,62 @@ class bookmarksController extends require('./Controller') {
         this.bookmarksRepository = new Repository('Bookmarks');
     }
     get(id){
-        let params = this.getQueryStringParams();
-        if(!isNaN(id))
-            this.response.JSON(this.bookmarksRepository.get(id));
-        else if(params == null)
-            this.response.JSON(this.bookmarksRepository.getAll());
-        else if(Object.keys(params).length === 0)
-            this.help();
-        else {
-            var filteredBookmarks = this.bookmarksRepository.getAll();
-            //recherche avec nom
-            if('name' in params){
-                var searched = params.Name.replace('"', ''); //pour enlever les guillemets
-                searched = searched.replace('"', '');
-                searched = searched.charAt(0).toUpperCase() + searched.slice(1);
-                if(params.Name.includes('*')) {
-                  searched = searched.replace('*', '');
-                  filteredBookmarks = filteredBookmarks.filter(function (bm){
-                    return bm["Name"].includes(searched);
-                  });
-                } 
-                else {
-                  filteredBookmarks = filteredBookmarks.filter(function (bm){
-                    return bm["Name"] == searched;
-                  });
-                }
-            }
-            //recherge avec categorie
-            if('category' in params){
-                var searched = params.Category.replace('"', ''); //pour enlever les guillemets
-                searched = searched.replace('"', '');
-                searched = params.Category.charAt(0).toUpperCase() + params.Category.slice(1);
-                if(params.Category.includes('*')) {
-                    searched = searched.replace('*', '');
-                    filteredBookmarks = filteredBookmarks.filter(function (bm){
-                    return bm["Category"].includes(searched);
-                    });
-                } 
-                else {
-                    filteredBookmarks = filteredBookmarks.filter(function (bm){
-                      return bm["Category"] == searched;
-                    });
-                  }
-            }
-            if('sort' in params){
-                switch (params.sort){
-                  case '"name"':
-                  case 'name':
-                    filteredBookmarks.sort(function (a,b) {
-                      return (a["Name"] > b["Name"] ? 1 : -1)
-                    });
-                    break;
-                  case '"category"':
-                  case 'category':
-                    filteredBookmarks.sort(function (a,b) {
-                      return (a["Category"] < b["Category"] ? 1 : -1)
-                    });
-                    break;
-                }
+      let params = this.getQueryStringParams();
+      if(!isNaN(id))
+          this.response.JSON(this.bookmarksRepository.get(id));
+      else if(params == null)
+          this.response.JSON(this.bookmarksRepository.getAll());
+      else if(Object.keys(params).length === 0)
+          this.help();
+      else {
+          var filteredBookmarks = this.bookmarksRepository.getAll();
+          //recherche avec nom
+          if('name' in params){
+              if(params.name.includes('*')) {
+                var searched = params.name.replace('*', '');
+                filteredBookmarks = filteredBookmarks.filter(function (bm){
+                  return bm["Name"].includes(searched);
+                });
+              } 
+              else {
+                var searched = capitalizeFirstLetter(params.name);
+                filteredBookmarks = filteredBookmarks.filter(function (bm){
+                  return bm["Name"] == searched;
+                });
               }
-            //Renvoi la liste des bookmarks apres traitements
-            this.response.JSON(filteredBookmarks);
-        }
+          }
+          //recherge avec categorie
+          if('category' in params){
+              if(params.category.includes('*')) {
+                  var searched = params.category.replace('*', '');
+                  filteredBookmarks = filteredBookmarks.filter(function (bm){
+                  return bm["Category"].includes(searched);
+                  });
+              } 
+              else {
+                  var searched = capitalizeFirstLetter(params.category);
+                  filteredBookmarks = filteredBookmarks.filter(function (bm){
+                    return bm["Category"] == searched;
+                  });
+                }
+          }
+          if('sort' in params){
+              switch (params.sort){
+                case 'name':
+                  filteredBookmarks.sort(function (a,b) {
+                    return (a["Name"] > b["Name"] ? 1 : -1)
+                  });
+                  break;
+                case 'category':
+                  filteredBookmarks.sort(function (a,b) {
+                    return (a["Category"] < b["Category"] ? 1 : -1)
+                  });
+                  break;
+              }
+            }
+          //Renvoi la liste des bookmarks apres traitements
+          this.response.JSON(filteredBookmarks);
+      }
     }
     // POST: api/bookmarks body payload[{Name": "...", "URL": "...", "Category": "..."}]
     post(bmData){ 

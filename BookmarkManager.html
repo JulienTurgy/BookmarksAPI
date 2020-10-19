@@ -124,10 +124,9 @@
                 $('#modifybookmark').click(modifybookmark);
                 $('#cancel').click(eraseForm);
                 $('#Name').keypress(textInputAlphaFilter);
-                $('#btnSearch').click(getSortedbookmarks);
-                //$('#NameColumn').click(webAPI_getSortedbookmarks(updatebookmarkList, insertErrorStatus));
-                //$('#UrlColumn').click(webAPI_getSortedbookmarks(updatebookmarkList, insertErrorStatus));
-               // $('#CategoryColumn').click(webAPI_getSortedbookmarks(updatebookmarkList, insertErrorStatus));
+                $('#btnSearch').click(getBookmarkByName);
+                $('#NameColumn').click(getBookmarksSortByName);
+                $('#CategoryColumn').click(getBookmarksSortByCategory);
 
                 // Ajout d'un message d'attente de rÃ©ponse du serveur.
                 // Cela peut prendre quelques secondes avant que le serveur Web
@@ -222,10 +221,17 @@
                 webAPI_getbookmarks(updatebookmarkList, insertErrorStatus);
             }
 
-            function getSortedbookmarks() {
-                searchString = $('#txtSearch').val()
-                alert(searchString);
-                //webAPI_getSortedbookmarks(updatebookmarkList, insertErrorStatus);
+            function getBookmarkByName() {
+                var searchString = $('#txtSearch').val()
+                webAPI_getSortedbookmarks("?name=" + searchString, updatebookmarkList, insertErrorStatus);
+            }
+
+            function getBookmarksSortByName(){
+                webAPI_getSortedbookmarks("?sort=name", updatebookmarkList, insertErrorStatus);
+            }
+
+            function getBookmarksSortByCategory(){
+                webAPI_getSortedbookmarks("?sort=category", updatebookmarkList, insertErrorStatus);
             }
 
             // Afficher le formulaire pour la saisie de bookmark

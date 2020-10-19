@@ -3,7 +3,7 @@
  */
 
 const apiBaseURL= "http://localhost:5000/api/bookmarks";
-//const apiBaseURL= "http://cliff-alluring-wormhole.glitch.me/api/bookmarks";
+//const apiBaseURL= "http://accidental-honeysuckle-robin.glitch.me/api/bookmarks";
 
 function webAPI_getbookmarks( successCallBack, errorCallBack) {
     $.ajax({
@@ -37,7 +37,7 @@ function webAPI_getbookmark( id, successCallBack, errorCallBack) {
 
 function webAPI_getSortedbookmarks(sortOpt, successCallBack, errorCallBack) {
     $.ajax({
-        url: apiBaseURL,
+        url: apiBaseURL + sortOpt,
         type: 'GET',
         contentType:'text/plain',
         data:{},
