@@ -5,6 +5,7 @@ const Repository = require('../models/Repository');
 const Bookmark = require('../models/bookmark');
 const url = require('url');
 const { strict } = require('assert');
+const { capitalizeFirstLetter } = require('../utilities');
 
 module.exports = 
 class bookmarksController extends require('./Controller') {
@@ -24,10 +25,10 @@ class bookmarksController extends require('./Controller') {
             var filteredBookmarks = this.bookmarksRepository.getAll();
             //recherche avec nom
             if('name' in params){
-                var searched = params.name.replace('"', ''); //pour enlever les guillemets
+                var searched = params.Name.replace('"', ''); //pour enlever les guillemets
                 searched = searched.replace('"', '');
                 searched = searched.charAt(0).toUpperCase() + searched.slice(1);
-                if(params.name.includes('*')) {
+                if(params.Name.includes('*')) {
                   searched = searched.replace('*', '');
                   filteredBookmarks = filteredBookmarks.filter(function (bm){
                     return bm["Name"].includes(searched);
@@ -41,10 +42,10 @@ class bookmarksController extends require('./Controller') {
             }
             //recherge avec categorie
             if('category' in params){
-                var searched = params.category.replace('"', ''); //pour enlever les guillemets
+                var searched = params.Category.replace('"', ''); //pour enlever les guillemets
                 searched = searched.replace('"', '');
-                searched = params.category.charAt(0).toUpperCase() + params.category.slice(1);
-                if(params.category.includes('*')) {
+                searched = params.Category.charAt(0).toUpperCase() + params.Category.slice(1);
+                if(params.Category.includes('*')) {
                     searched = searched.replace('*', '');
                     filteredBookmarks = filteredBookmarks.filter(function (bm){
                     return bm["Category"].includes(searched);
@@ -77,45 +78,38 @@ class bookmarksController extends require('./Controller') {
         }
     }
     // POST: api/bookmarks body payload[{Name": "...", "URL": "...", "Category": "..."}]
-    post(){ 
-        let params = this.getQueryStringParams();
-        const bookmark = this.bookmarksRepository.getAll();
-        //recherhe un duplicate
-        let bmExists = false;
-        for (let i = 0; i < bookmark.length; i++){
-          if(bookmark[i].Name == params.name || bookmark[i].Url == params.url)
-            bmExists = true;
+    post(bmData){ 
+      if(!this.bookmarkExists(bmData.Name, bmData.Url))
+      {
+        let newBookmark = new Bookmark(
+          capitalizeFirstLetter(bmData.Name), 
+          bmData.Url, 
+          capitalizeFirstLetter(bmData.Category)
+        );
+
+        if (newBookmark){
+          this.bookmarksRepository.add(newBookmark);
+          this.response.created(newBookmark);
         }
-        if(!bmExists)
-        {
-          //mettre la 1e lettre en majuscule
-          let capName = params.name.charAt(0).toUpperCase() + params.name.slice(1);
-          let capCategory = params.category.charAt(0).toUpperCase() + params.category.slice(1);
-          let newBookmark = this.bookmarksRepository.add(
-            new Bookmark(capName, params.url, capCategory)
-          );
-          if (newBookmark)
-              this.response.created(newBookmark);
-          else
-              this.response.internalError();
-        }
-        else{
-            this.response.conflict();
-        }
+        else
+            this.response.internalError();
+      }
+      else{
+          this.response.conflict();
+      }
     }
     // PUT: api/bookmarks body payload[{"Id":..., "Name": "...", "URL": "...", "Category": "..."}]
-    put(id){
-      let params = this.getQueryStringParams();
+    put(bmData){
       let bookmark = null;
-      if(!isNaN(id)){
-        bookmark = this.bookmarksRepository.get(id);
+      if(!isNaN(bmData.Id)){
+        bookmark = this.bookmarksRepository.get(bmData.Id);
         if(bookmark){
-          if(params.name)
-            bookmark.Name = params.name.charAt(0).toUpperCase() + params.name.slice(1);
-          if(params.url)
-            bookmark.Url = params.url
-          if(params.category)
-            bookmark.Category = params.category.charAt(0).toUpperCase() + params.category.slice(1);
+          if(bookmark.Name)
+            bookmark.Name = capitalizeFirstLetter(bmData.Name);
+          if(bookmark.Url)
+            bookmark.Url = bmData.Url
+          if(bookmark.Category)
+            bookmark.Category = capitalizeFirstLetter(bmData.Category)
           if (this.bookmarksRepository.update(bookmark))
             this.response.ok();
         else 
@@ -146,22 +140,33 @@ class bookmarksController extends require('./Controller') {
           //id is NaN
           this.response.unprocessable();
     }
+
     help() {
-        // expose all the possible query strings
-        let content = "<div style=font-family:arial>";
-        content += "<h3>GET : api/bookmarks endpoint  <br> List of de parametres possibles:</h3><hr>";
-        content += "<h4>GET: 	/api/bookmarks				voir tous les bookmarks</h4>";
-        content += "<h4>GET: 	/api/bookmarks?sort=\"name\"		voir tous les bookmarks triés ascendant par Name</h4>";
-        content += "<h4>GET: 	/api/bookmarks?sort=\"category\"	voir tous les bookmarks triés descendant par Category";
-        content += "<h4>GET: 	/api/bookmarks/id			voir le bookmark Id";
-        content += "<h4>GET: 	/api/bookmark?name=\"nom\"		voir le bookmark avec Name = nom</h4>";
-        content += "<h4>GET: 	/api/bookmark?name=\"ab*\" 		voir tous les bookmarks avec Name commençant par ab</h4>";
-        content += "<h4>GET: 	/api/bookmark?category=\"sport\"	voir tous les bookmarks avec Category = sport</h4>";
-        content += "<h4>GET: 	/api/bookmark?				Voir la liste des paramètres supportés</h4>";
-        content += "<h4>POST: 	/api/bookmarks				Ajout d’un bookmark</h4>";
-        content += "<h4>PUT: 	/api/bookmarks/Id			Modifier le bookmark Id</h4>";
-        content += "<h4>PUT: 	/api/bookmarks/Id			Modifier le bookmark Id</h4>";
-        this.res.writeHead(200, {'content-type':'text/html'});
-        this.res.end(content) + "</div>";
+      // expose all the possible query strings
+      let content = "<div style=font-family:arial>";
+      content += "<h3>GET : api/bookmarks endpoint  <br> List of de parametres possibles:</h3><hr>";
+      content += "<h4>GET: 	/api/bookmarks				voir tous les bookmarks</h4>";
+      content += "<h4>GET: 	/api/bookmarks?sort=\"name\"		voir tous les bookmarks triés ascendant par Name</h4>";
+      content += "<h4>GET: 	/api/bookmarks?sort=\"category\"	voir tous les bookmarks triés descendant par Category";
+      content += "<h4>GET: 	/api/bookmarks/id			voir le bookmark Id";
+      content += "<h4>GET: 	/api/bookmark?name=\"nom\"		voir le bookmark avec Name = nom</h4>";
+      content += "<h4>GET: 	/api/bookmark?name=\"ab*\" 		voir tous les bookmarks avec Name commençant par ab</h4>";
+      content += "<h4>GET: 	/api/bookmark?category=\"sport\"	voir tous les bookmarks avec Category = sport</h4>";
+      content += "<h4>GET: 	/api/bookmark?				Voir la liste des paramètres supportés</h4>";
+      content += "<h4>POST: 	/api/bookmarks				Ajout d’un bookmark</h4>";
+      content += "<h4>PUT: 	/api/bookmarks/Id			Modifier le bookmark Id</h4>";
+      content += "<h4>PUT: 	/api/bookmarks/Id			Modifier le bookmark Id</h4>";
+      this.res.writeHead(200, {'content-type':'text/html'});
+      this.res.end(content) + "</div>";
     }
+
+    bookmarkExists(name, url){
+      const bookmark = this.bookmarksRepository.getAll();
+      let bmExists = false;
+      for (let i = 0; i < bookmark.length; i++){
+        if(bookmark[i].Name == name || bookmark[i].Url == url)
+          bmExists = true;
+      }
+      return bmExists;
+  }
 }

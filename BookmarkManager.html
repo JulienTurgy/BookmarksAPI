@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta author="Julien Turgy, à partir de l'exemple de Nicolas Chourot">
+        <meta http-equiv="Content-Type" content="text/html; charset= ISO-8859-1">
+        <title>Gestion de bookmarks</title>
+
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+        <!-- Style pour les infobulles -->
+        <link rel="stylesheet" href="css/tooltip.css">
+
+        <!-- Style pour l'interface et la liste des bookmarks -->
+        <link rel="stylesheet" href="css/bookmarkManagerLayout.css">
+
+        <!-- pour la dialogue de confirmation de retrait d'un bookmark -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
+
+        <!-- lien vers le favicon gÃ©nÃ©rÃ© par https://favicon.io/favicon-converter/ -->
+        <link rel="icon" href="favicon.ico">
+
+    </head>
+    <body>
+        <!-- EntÃªte de la liste de bookmark -->
+        <div class="container">
+            <h3><img src="favicon.ico">&nbsp;Gestionnaire de bookmarks</h3>
+            <div class="array-container">
+                <div class="header-container">
+                    <div class="header-bookmarks-container">
+                        <div>Nom</div>
+                        <div>Url</div>
+                        <div>Category</div>
+                        <div>
+                            <button id="showAddbookmark"
+                                    tooltip="Ajouter un bookmark" tooltip-position="left">
+                                <span class="glyphicon glyphicon-plus"></span>
+                            </button>
+                        </div>
+                        <div>&nbsp;</div>
+                    </div>
+                </div>
+                <div class="form-container">
+                    <div class="form-bookmark-container" id="bookmarkForm">
+                        <!--
+                        Formulaire de saisie/modification de bookmark:
+                        Contient les contrÃ´les de saisie de bookmark.
+                        Notez qu'elle sera masquÃ©e et n'apparaitra que dans le mode d'ajout ou modification
+                        de bookmark.
+                        -->
+                        <div>
+                            <!-- champ masquÃ© qui recevra le id d'un bookmark Ã  modifier -->
+                            <input type="hidden" id="Id" />
+                            <input type="text" id="Name" placeholder="Nom" class="form-control"/>
+                        </div>
+                        <div>
+                            <input type="text" id="Url" placeholder="Url"  class="form-control"/>
+                        </div>
+                        <div>
+                            <input type="text" id="Category" placeholder="Category" class="form-control"/>
+                        </div>
+                        <div>
+                            <!-- bouton de commande d'ajout de bookmark -->
+                            <button id="addbookmark" tooltip="Ajouter" tooltip-position="left">
+                                <span class="glyphicon glyphicon glyphicon-ok"></span>
+                            </button>
+                            <!-- bouton de commande de modification de bookmark -->
+                            <button id="modifybookmark" tooltip="Modifier" tooltip-position="left">
+                                <span class="glyphicon glyphicon-ok"></span>
+                            </button>
+                        </div>
+                        <div>
+                            <button id="cancel" tooltip="Annuler" tooltip-position="left">
+                                <span  class="glyphicon glyphicon-repeat"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="bookmark-list-scroll-containter">
+                    <div class="bookmark-list-container" id="bookmarkList">
+                        <!-- La liste de bookmarks sera injectÃ©e ici par du JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fichier local qui contient la librairie jQuery -->
+        <script src="js/jquery-3.3.1.js"></script>
+        <!-- Fichier local qui contient la librairie de Validation -->
+        <script src="js/Validation.js"></script>
+        <!-- Fichier local qui contient les fonctions de requÃªte au service Web API -->
+        <script src="js/bookmarkManagerWebAPIRequest.js"></script>
+        <!-- Fichier local qui contient la librairie de dialogue de confirmation -->
+        <script src="js/jquery-confirm.js"></script>
+        <!-- Fichier local qui contient la librairie de gestion de champ masquÃ© -->
+        <script src="js/jquery.maskedinput.js"></script>
+
+        <script>
+            "use strict";
+
+            $(document).ready(initUI);
+
+            let editMode = false;
+            let addMode = false;
+
+            // objet d'automatisation de la validation
+            let validationProvider;
+
+            // Initialisation de l'interface
+            function initUI() {
+                initValidation();
+                eraseForm();
+
+                // Gestionnaires du clic sur les boutons
+                $('#addbookmark').click(addbookmark);
+                $('#showAddbookmark').click(showAddbookmark);
+                $('#modifybookmark').click(modifybookmark);
+                $('#cancel').click(eraseForm);
+                $('#Name').keypress(textInputAlphaFilter);
+
+                // Ajout d'un message d'attente de rÃ©ponse du serveur.
+                // Cela peut prendre quelques secondes avant que le serveur Web
+                // redÃ©marre aprÃ¨s une longue pÃ©riode sans requÃªte
+                insertWaitingStatus();
+                // Extraire la liste des bookmarks via le service web API
+                // et mettre Ã  jour le tableau qui prÃ©sente la liste de bookmarks
+                getbookmarks();
+            }
+
+            function insertWaitingStatus(){
+                $('#bookmarkList').empty()
+                $('#bookmarkList').append(  makeCell("En attente de rÃ©ponse du service Web...", "waiting"));
+                $('#bookmarkList').append($('<img src="images/Loading_icon.gif" alt="waiting"/>'));
+            }
+
+            function insertErrorStatus(status){
+                $('#bookmarkList').empty()
+                $('#bookmarkList').append($('<img src="images/error.png" style="width:60px;margin:10px" alt="httpError"/>'));
+                $('#bookmarkList').append(  makeCell("Erreur de requÃªte au service Web...", "httpError"));
+                $('#bookmarkList').append(  makeCell(status, "httpError"));
+            }
+
+            function initValidation() {
+                validationProvider = new ValidationProvider();
+                validationProvider.addControl("Name", validate_Name);
+                validationProvider.addControl("Url", validate_Url);
+                validationProvider.addControl("Category", validate_Category);
+            }
+
+            function resetValidation() {
+                validationProvider.reset();
+            }
+
+            function validate_Name(){
+                let TBX_FirstName = document.getElementById("Name");
+
+                if (TBX_FirstName.value === "")
+                    return "Nom manquant";
+
+                return "";
+            }
+
+            function validate_Url(){
+                let TBX_LastName = document.getElementById("Url");
+
+                if (TBX_LastName.value === "")
+                    return "Url manquant";
+
+                return "";
+            }
+
+            function validate_Category(){
+                let TBX_Category = document.getElementById("Category");
+
+                if (TBX_Category.value === "")
+                    return "Adresse de courriel manquante";
+
+                return "";
+            }
+
+            // Effacer les contrÃ´les de saisie/modification d'un bookmark
+            // et rÃ©tablir la visibilitÃ© des boutons
+            function eraseForm() {
+                addMode = false;
+                editMode = false;
+                resetValidation();
+
+                // rÃ©tablir la couleur de fond de toutes les rangÃ©es
+                $('.cell').removeClass('selectedRow');
+
+                // masquer le formulaire de saisie/modification de bookmark
+                $('#bookmarkForm').hide();
+
+                // RÃ©tablir la visibilitÃ© par dÃ©faut des boutons
+                $('#addbookmark').show();
+                $('#modifybookmark').hide();
+                $('#showAddbookmark').show();
+
+                // Effacer les champs du formulaire
+                $('#Name').val('');
+                $('#Url').val('');
+                $('#Category').val('');
+
+                // Masquer tous les boutons des rangÃ©es de bookmark
+                $('#bookmarkList button').hide();
+
+            }
+
+            // RequÃªte au service web API: Liste des bookmarks
+            function getbookmarks() {
+                webAPI_getbookmarks(updatebookmarkList, insertErrorStatus);
+            }
+
+            // Afficher le formulaire pour la saisie de bookmark
+            function showAddbookmark() {
+                addMode = true;
+                $('#bookmarkForm').show();
+                $('#showAddbookmark').hide();
+            }
+
+            // Afficher le formulaire pour la modification de bookmark
+            function showEditbookmark(e){
+                editMode = true;
+                $('#showAddbookmark').hide();
+                $('#addbookmark').hide();
+                $('#bookmarkForm').show();
+
+                let bookmarkId = e.currentTarget.id.split('_')[1];
+
+                // Extraction du bookmark de Id = bookmarkId via le service web API
+                webAPI_getbookmark(bookmarkId, ShowForm);
+            }
+
+            function ShowForm(bookmark) {
+                // peupler les contrÃ´les de saisie
+                $('#Id').val(bookmark.Id); // input cachÃ© qui mÃ©morise le Id du bookmark
+                $('#Name').val(bookmark.Name);
+                $('#Url').val(bookmark.Url);
+                $('#Category').val(bookmark.Category);
+                $('#modifybookmark').show();
+            }
+
+            // Retourne un objet bookmark Ã  partir des valeurs prÃ©levÃ©es se trouvant dans les contrÃ´les de saisie.
+            // Si le paramÃ¨tre includeId est vrai, inclure le Id du bookmark dans l'objet bookmark retournÃ©
+            function makebookmarkFromForm(includeId = false) {
+                if (includeId) {
+                    // RÃ©cupÃ©ration du Id du bookmark dans le contrÃ´le cachÃ©
+                    let bookmarkId = parseInt($('#Id').val());
+                    return {Id: bookmarkId, Name: $('#Name').val(), Url: $('#Url').val(), Category: $('#Category').val()};
+                }
+                return { Id: 0, Name: $('#Name').val(), Url: $('#Url').val(), Category: $('#Category').val()};
+            }
+
+            // Ajout d'un bookmark
+            function addbookmark() {
+                let bookmark = makebookmarkFromForm();
+                if (validationProvider.isValid()) {
+                    webAPI_addbookmark(bookmark, getbookmarks, insertErrorStatus);
+                }
+            }
+
+            // RequÃªte au service Web API: Modification d'un bookmark
+            function modifybookmark() {
+                // construction de l'objet bookmark
+                let bookmark = makebookmarkFromForm(true);
+                if (validationProvider.isValid()) {
+                    webAPI_modifybookmark(bookmark, getbookmarks, insertErrorStatus);
+                }
+            }
+
+            // AprÃ¨s confirmation, requÃªte au service Web API de retrait d'un bookmark
+            function deletebookmark(e) {
+                // Extraction du Id du bookmark inscrit dans l'attribut id de l'Ã©lÃ©ment dÃ©clencheur de l'Ã©vÃ©nement click
+                let bookmarkId = parseInt(e.currentTarget.id.split('_')[1]);
+                webAPI_getbookmark(bookmarkId, confirmDeletebookmark, insertErrorStatus);
+            }
+
+            function confirmDeletebookmark(bookmark) {
+                $.confirm({
+                    title: 'Attention!',
+                    content: 'Effacer '+ bookmark.Name +'?',
+                    buttons: {
+                        confirmer: function () {
+                            webAPI_deletebookmark(bookmark.Id, getbookmarks, insertErrorStatus);
+                        },
+                        annuler: {},
+                    }
+                });
+            }
+
+            function cellOver(e){
+                if (!addMode && !editMode) {
+                    // currentTarget.className contient en principe : 'row_x cell ...'
+                    let bookmarkId = e.currentTarget.className.split(' ')[0].split('_')[1];
+                    $('#edit_' + bookmarkId).show();
+                    $('#delete_' + bookmarkId).show();
+                    $('.row_'+bookmarkId).addClass('selectedRow');
+                }
+            }
+            function cellBlur(e){
+                if (!editMode) {
+                    // currentTarget.className contient en principe : 'row_x cell ...'
+                    let bookmarkId = e.currentTarget.className.split(' ')[0].split('_')[1];
+                    $('#edit_' + bookmarkId).hide();
+                    $('#delete_' + bookmarkId).hide();
+                    $('.row_'+bookmarkId).removeClass('selectedRow');
+                }
+            }
+
+            function makeCell(content, cssClass){
+                return $('<div class= "' + cssClass + '">' + content + '</div>');
+            }
+
+            function makeButton(cssClass, id, tooltip) {
+                return $('<button id="' + id + '" class="'+ cssClass + '"tooltip="' + tooltip + '" tooltip-position="left"></button>');
+            }
+
+            function makeGlyphIcon(glyphIconId){
+                return $("<span class='glyphicon glyphicon-" + glyphIconId + "'></span>");
+            }
+
+            // Rafraichir la liste des bookmarks
+            // paramÃ¨tre bookmarks: tableau d'objets bookmark
+            function updatebookmarkList(bookmarks) {
+                eraseForm();
+                var oddRow = true;
+                // effacer le tableau affichant la liste de bookmarks
+                $('#bookmarkList').empty();
+
+                // pour tous les bookmarks du tableau bookmarks
+                bookmarks.forEach(bookmark => { // crÃ©er une nouvelle rangÃ©e
+
+                    // dÃ©terminer la couleur de la rangÃ©e
+                    let bgColorRow = "row_" + bookmark.Id + " cell " + (oddRow?  "oddRow": "evenRow") ;
+
+                    // Distribution des donnÃ©es du bookmark dans des cellules de la rangÃ©e
+                    $('#bookmarkList').append(makeCell(bookmark.Name, bgColorRow ));
+                    $('#bookmarkList').append(makeCell(bookmark.Url, bgColorRow));
+                    $('#bookmarkList').append(makeCell(bookmark.Category, bgColorRow));
+
+                    // Bouton d'appel Ã  la modification du bookmark
+                    $('#bookmarkList').append(
+                        makeCell("", bgColorRow).append(
+                            makeButton("editbookmark","edit_" + bookmark.Id ,"Modifier "+ bookmark.Name).append(
+                                makeGlyphIcon('pencil'))));
+
+                    // Bouton d'appel au retrait du bookmark
+                    $('#bookmarkList').append(
+                        makeCell("", bgColorRow).append(
+                            makeButton("deletebookmark","delete_" + bookmark.Id ,"Effacer "+ bookmark.Name).append(
+                                makeGlyphIcon('remove'))));
+
+                    oddRow = !oddRow;
+               });
+
+               // Attacher les gestionnaires du clic aux nouveaux boutons
+               $('.editbookmark').click(showEditbookmark);
+               $('.deletebookmark').click(deletebookmark);
+               $('#bookmarkList button').hide();
+               $('input').on("paste",function(e) { e.preventDefault(); });
+
+               // Attacher les Ã©vÃ©nements pour mettre en surbrillance une rangÃ©e survolÃ©e
+               $('.cell').mouseover(cellOver);
+               $('.cell').mouseleave(cellBlur);
+            }
+
+        </script>
+    </body>
+</html>

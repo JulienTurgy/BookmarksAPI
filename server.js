@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////
-// Uncomment to create and fill with data ./contacts.json file
-// let Contacts = require('./models/initContacts.js');
-// Contacts.initContacts(); 
+// Uncomment to create and fill with data ./Bookmarks.json file
+// let Bookmarks = require('./models/initBookmarks.js');
+// Bookmarks.initBookmarks(); 
 ///////////////////////////////////////////////////////////////////////////////
 
 function ShowRequestInfo(req){

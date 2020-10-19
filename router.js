@@ -109,17 +109,17 @@ exports.dispatch_API_EndPoint = function(req, res){
                 return true;
             }
             if (req.method === 'POST'){
-                //processJSONBody(req, controller,"post");
-                controller.post();
+                processJSONBody(req, controller, "post");
+                //controller.post();
                 return true;
             }
             if (req.method === 'PUT'){
-                //processJSONBody(req, controller,"put");
-                controller.put(id);
+                processJSONBody(req, controller,"put");
+                //controller.put(id);
                 return true;
             }
             if (req.method === 'PATCH'){
-                //processJSONBody(req, controller,"patch");
+                processJSONBody(req, controller,"patch");
                 return true;
             }
             if (req.method === 'DELETE') {

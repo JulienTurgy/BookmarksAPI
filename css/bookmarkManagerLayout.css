@@ -1,6 +1,3 @@
-/*
-    auteur: Nicolas Chourot
- */
 body {
     background-color: white;
 }
@@ -13,11 +10,11 @@ button {
     overflow-y: scroll;
     overflow-x: hidden;
 }
-.header-contacts-container {
+.header-bookmarks-container {
     display: grid;
     grid-template-columns: 25% 25% 35% 5% 10%;
 }
-.header-contacts-container div {
+.header-bookmarks-container div {
     font-size: large;
     font-weight: bold;
     text-align: left;
@@ -25,16 +22,16 @@ button {
     background-color: gray;
     color: white;
 }
-.contact-list-scroll-containter {
+.bookmark-list-scroll-containter {
     height: 320px;
     overflow-y: scroll;
     overflow-x: hidden;
 }
-.contact-list-container {
+.bookmark-list-container {
     display: grid;
     grid-template-columns:   25% 25% 35% 5% 10%;
 }
-.contact-list-container div {
+.bookmark-list-container div {
     text-align: left;
     padding: 5px;
 }
@@ -59,13 +56,13 @@ button {
 .form-container {
     overflow-y: hidden;
 }
-.form-contact-container {
+.form-bookmark-container {
     display: grid;
     grid-template-columns:  25% 25% 35% 5% 10%;
     overflow-y: scroll;
     overflow-x: hidden;
 }
-.form-contact-container div {
+.form-bookmark-container div {
     text-align: left;
     padding: 5px;
     background-color: lightgray;
